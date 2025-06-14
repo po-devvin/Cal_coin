@@ -1,0 +1,611 @@
+{
+  "version": "0.1.0",
+  "name": "cal_coin",
+  "instructions": [
+    {
+      "name": "initializeDapp",
+      "docs": [
+        "Initialize the dapp configuration."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initializeMint",
+      "docs": [
+        "Phase 2: Create the SPL Token 2022 mint with the PDA as authority."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "PDA that will own & mint tokens"
+          ]
+        },
+        {
+          "name": "mintForDapp",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "SPL-Token-2022 mint"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "decimals",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "registerUser",
+      "docs": [
+        "One-time registration for a user, creates their UserPda and StakeAccount."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "gatewayToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Initialize staking account for this user"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim",
+      "docs": [
+        "Claim faucet tokens (same as before)."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "gatewayToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setExempt",
+      "docs": [
+        "Change the exempt address."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currentExempt",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newExempt",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "stake",
+      "docs": [
+        "Stake a given amount of tokens. Must be ≥ MIN_STAKE_LAMPORTS."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeVault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA associated token account for holding staked tokens"
+          ]
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "PDA that signs for transferring from vault"
+          ]
+        },
+        {
+          "name": "userAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "User's token account (source of stake)"
+          ]
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint for cal_coin"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "requestUnstake",
+      "docs": [
+        "Request to unstake all tokens. After 2 days, user can call `claim_stake`."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA authority (for potential later transfers)"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimStake",
+      "docs": [
+        "After 2 days from unstake request, claim tokens back to user's ATA."
+      ],
+      "accounts": [
+        {
+          "name": "dappConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeVault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA token account"
+          ]
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA authority"
+          ]
+        },
+        {
+          "name": "userAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "User's token account (destination for withdrawal)"
+          ]
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint for cal_coin"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "DappConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gatekeeperNetwork",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "mintAuthorityBump",
+            "type": "u8"
+          },
+          {
+            "name": "exemptAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "initialized",
+            "type": "bool"
+          },
+          {
+            "name": "totalMinted",
+            "type": "u64"
+          },
+          {
+            "name": "maxSupply",
+            "type": "u64"
+          },
+          {
+            "name": "totalClaims",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeAccount",
+      "docs": [
+        "Per-user staking account."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "stakeAmount",
+            "type": "u64"
+          },
+          {
+            "name": "lastRewardTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "pendingWithdrawalAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawRequestTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserPda",
+      "docs": [
+        "Per-user account tracking faucet claims."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "lastClaimedTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "claimedSoFar",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "CooldownNotMet",
+      "msg": "Must wait 60s before claiming again."
+    },
+    {
+      "code": 6001,
+      "name": "GatewayCheckFailed",
+      "msg": "Gateway token check failed."
+    },
+    {
+      "code": 6002,
+      "name": "NotExemptAddress",
+      "msg": "Signer is not authorized to change exempt address."
+    },
+    {
+      "code": 6003,
+      "name": "NotAuthorized",
+      "msg": "Caller is not authorized for this action."
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyInitialized",
+      "msg": "Dapp configuration already initialized."
+    },
+    {
+      "code": 6005,
+      "name": "IssuanceRateTooHigh",
+      "msg": "Issuance rate overflowed."
+    },
+    {
+      "code": 6006,
+      "name": "SupplyExceeded",
+      "msg": "Supply would exceed maximum allowed."
+    },
+    {
+      "code": 6007,
+      "name": "StakeTooSmall",
+      "msg": "Stake amount is below minimum requirement."
+    },
+    {
+      "code": 6008,
+      "name": "ArithmeticError",
+      "msg": "Arithmetic overflow occurred."
+    },
+    {
+      "code": 6009,
+      "name": "NothingToUnstake",
+      "msg": "Nothing to unstake."
+    },
+    {
+      "code": 6010,
+      "name": "UnstakeAlreadyRequested",
+      "msg": "Unstake already requested."
+    },
+    {
+      "code": 6011,
+      "name": "NothingToClaim",
+      "msg": "Nothing to claim from stake."
+    },
+    {
+      "code": 6012,
+      "name": "UnstakeDelayNotMet",
+      "msg": "Unstake delay not yet met."
+    }
+  ],
+  "metadata": {
+    "address": "AFrYiV7fCPEVCbCXktrmGW9YuNPboaPUmFWTca3UTqZp"
+  }
+}

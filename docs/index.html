@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalCoin DApp (Devnet)</title>
+</head>
+<body>
+  <h1>CalCoin DApp</h1>
+  <button id="connect-btn">Connect Phantom Wallet</button>
+  <button id="register-btn" disabled>Register User</button>
+  <button id="claim-btn" disabled>Claim Tokens</button>
+
+  <!-- Solana Web3.js SDK -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+  <script>
+    (async () => {
+      // Detect Phantom provider
+      const provider = window.phantom?.solana;
+      if (!provider?.isPhantom) {
+        alert('Phantom Wallet not found. Please install Phantom to continue.');
+        return;
+      }
+      
+      // Connect to Phantom
+      let userPubkey;
+      document.getElementById('connect-btn').onclick = async () => {
+        try {
+          const resp = await provider.connect();  // ([docs.phantom.com](https://docs.phantom.com/solana/detecting-the-provider?utm_source=chatgpt.com))
+          userPubkey = resp.publicKey;
+          console.log('Connected wallet:', userPubkey.toString());
+
+          // Enable actions
+          document.getElementById('register-btn').disabled = false;
+          document.getElementById('claim-btn').disabled = false;
+        } catch (err) {
+          console.error('Wallet connection failed:', err);
+        }
+      };
+
+      // Set up connection and program IDs
+      const connection = new solanaWeb3.Connection(
+        solanaWeb3.clusterApiUrl('devnet'),
+        'confirmed'
+      );  // ([quicknode.com](https://www.quicknode.com/guides/solana-development/transactions/how-to-send-a-transaction-on-solana-using-javascript?utm_source=chatgpt.com))
+      const PROGRAM_ID = new solanaWeb3.PublicKey('G5USAdnRvUW4jf14QmxSJPEV5YNXzRahXjZNHEmZmqTM');
+      const TOKEN_2022_PROGRAM_ID = new solanaWeb3.PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');  // ([spl.solana.com](https://spl.solana.com/token-2022?utm_source=chatgpt.com))
+      const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+      // Placeholder: user's gateway token account (for gateway checks)
+      const GATEWAY_TOKEN_PUBKEY = new solanaWeb3.PublicKey('<USER_GATEWAY_TOKEN_PUBKEY>');
+      // Placeholder: dApp's token mint address (set in initialize_mint)
+      const TOKEN_MINT_PUBKEY = new solanaWeb3.PublicKey('<YOUR_TOKEN_MINT_ADDRESS>');
+
+      // Derive PDAs
+      const [configPDA, configBump] = solanaWeb3.PublicKey.findProgramAddressSync(
+        [Buffer.from('dapp_config')],
+        PROGRAM_ID
+      );  // ([solana.com](https://solana.com/developers/cookbook/accounts/create-pda-account?utm_source=chatgpt.com))
+      const [userPDA, userBump] = solanaWeb3.PublicKey.findProgramAddressSync(
+        [Buffer.from('user_pda'), userPubkey.toBuffer()],
+        PROGRAM_ID
+      );  // ([solana.com](https://solana.com/developers/cookbook/accounts/create-pda-account?utm_source=chatgpt.com))
+      const [mintAuthPDA] = solanaWeb3.PublicKey.findProgramAddressSync(
+        [Buffer.from('mint_authority')],
+        PROGRAM_ID
+      );
+
+      // Helper to fetch recent blockhash
+      async function getBlockhash() {
+        const { blockhash } = await connection.getRecentBlockhash();  // ([quicknode.com](https://www.quicknode.com/guides/solana-development/transactions/how-to-send-a-transaction-on-solana-using-javascript?utm_source=chatgpt.com))
+        return blockhash;
+      }
+
+      // Register User instruction
+      document.getElementById('register-btn').onclick = async () => {
+        try {
+          // Instruction discriminator for `register_user` (first 8 bytes of sha256('global:register_user'))
+          const discReg = Buffer.from([0x3b,0xd8,0x3c,0x0e,0x34,0x32,0x0f,0x9c]);  // ([solscan.io](https://solscan.io/account/TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb?utm_source=chatgpt.com))
+          const data = discReg;  // no args
+
+          // Accounts per Anchor context
+          const keys = [
+            { pubkey: configPDA,               isSigner: false, isWritable: false },
+            { pubkey: userPubkey,              isSigner: true,  isWritable: true  },
+            { pubkey: GATEWAY_TOKEN_PUBKEY,    isSigner: false, isWritable: false },
+            { pubkey: userPDA,                 isSigner: false, isWritable: true  },
+            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: solanaWeb3.SYSVAR_RENT_PUBKEY,      isSigner: false, isWritable: false }
+          ];
+
+          const recentBlockhash = await getBlockhash();
+          let tx = new solanaWeb3.Transaction({
+            recentBlockhash,
+            feePayer: userPubkey
+          }).add(
+            new solanaWeb3.TransactionInstruction({
+              keys,
+              programId: PROGRAM_ID,
+              data
+            })
+          );
+
+          // Sign and send in one step
+          const { signature } = await provider.signAndSendTransaction(tx);  // ([docs.phantom.com](https://docs.phantom.com/phantom-deeplinks/provider-methods/signandsendtransaction?utm_source=chatgpt.com), [docs.phantom.com](https://docs.phantom.com/solana/sending-a-transaction?utm_source=chatgpt.com))
+          console.log('Register tx signature:', signature);
+          await connection.confirmTransaction(signature, 'confirmed');
+          console.log('User registration confirmed');
+        } catch (err) {
+          console.error('Registration error:', err);
+        }
+      };
+
+      // Claim Tokens instruction
+      document.getElementById('claim-btn').onclick = async () => {
+        try {
+          // Discriminator for `claim` (first 8 bytes of sha256('global:claim'))
+          const discClaim = Buffer.from([0x42,0xa6,0x90,0x13,0x6f,0xae,0x5d,0x3b]);  // ([solscan.io](https://solscan.io/account/TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb?utm_source=chatgpt.com))
+          const data = discClaim;
+
+          // Accounts per Anchor context for claim
+          const keys = [
+            { pubkey: configPDA,               isSigner: false, isWritable: false },
+            { pubkey: userPubkey,              isSigner: true,  isWritable: true  },
+            { pubkey: GATEWAY_TOKEN_PUBKEY,    isSigner: false, isWritable: false },
+            { pubkey: userPDA,                 isSigner: false, isWritable: true  },
+            { pubkey: TOKEN_MINT_PUBKEY,       isSigner: false, isWritable: true  },
+            { pubkey: mintAuthPDA,             isSigner: false, isWritable: false },
+            { pubkey: TOKEN_2022_PROGRAM_ID,   isSigner: false, isWritable: false },
+            { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: solanaWeb3.SYSVAR_RENT_PUBKEY,      isSigner: false, isWritable: false }
+          ];
+
+          const recentBlockhash = await getBlockhash();
+          let tx = new solanaWeb3.Transaction({
+            recentBlockhash,
+            feePayer: userPubkey
+          }).add(
+            new solanaWeb3.TransactionInstruction({
+              keys,
+              programId: PROGRAM_ID,
+              data
+            })
+          );
+
+          const { signature } = await provider.signAndSendTransaction(tx);  // ([docs.phantom.com](https://docs.phantom.com/phantom-deeplinks/provider-methods/signandsendtransaction?utm_source=chatgpt.com), [docs.phantom.com](https://docs.phantom.com/solana/sending-a-transaction?utm_source=chatgpt.com))
+          console.log('Claim tx signature:', signature);
+          await connection.confirmTransaction(signature, 'confirmed');
+          console.log('Claim confirmed');
+        } catch (err) {
+          console.error('Claim error:', err);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -8,7 +8,7 @@
       function login() {
         const clientId = "d85e00a1-9663-4b58-bd85-84b851b90f53";
         const redirectUri = location.origin + location.pathname;
-        const authUrl = `https://id.decideai.xyz/authorize?client_id=${clientId}` +
+        const authUrl = `https://id.decideai.xyz/#/app?client_id=${clientId}` +
                         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
                         `&response_type=id_token&scope=openid&nonce=` + crypto.randomUUID();
         window.location = authUrl;
